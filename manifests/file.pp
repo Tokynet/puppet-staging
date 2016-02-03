@@ -21,6 +21,7 @@ define staging::file (
   $wget_option = undef, #: options to pass to wget
   $tries       = undef, #: amount of retries for the file transfer when non transient connection errors exist
   $try_sleep   = undef, #: time to wait between retries for the file transfer
+  $recursive   = undef, #: whether or not to download the complete bucket
   $subdir      = $caller_module_name
 ) {
 
@@ -92,8 +93,8 @@ define staging::file (
         }
       } else {
         file { $target_file:
-          source             => $source,
-          replace            => false,
+          source  => $source,
+          replace => false,
         }
       }
     }
@@ -126,7 +127,8 @@ define staging::file (
       }
     }
     /^s3:\/\//: {
-      $command = "aws s3 cp ${source} ${target_file}"
+      if $recursive      { $command = "aws s3 cp ${source} ${target_file} --recursive"}
+      else               { $command = "aws s3 cp ${source} ${target_file}"}
       exec { $target_file:
         command   => $command,
       }
